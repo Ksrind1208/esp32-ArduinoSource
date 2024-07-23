@@ -29,8 +29,8 @@ class MyCallbacks: public BLECharacteristicCallbacks {
     }
 };
 //---- WiFi settings
-const char* ssid = "AIoT_JSC";
-const char* password = "aiot1234@";
+const char* ssid = "Minh Tam 2.4 G";
+const char* password = "21072018";
 //---- MQTT Broker settings
 const char* mqtt_server = "f41b6c6a5f49462c8c57817532ae5e39.s1.eu.hivemq.cloud"; // replace with your broker url
 const char* mqtt_username = "duc123123tc"; // replace with your username
@@ -111,7 +111,6 @@ void connectWifi(const char*SSID,const char* PASSWORD)
     client.setServer(mqtt_server, mqtt_port);
     client.setCallback(callback);
     connectMQTT();
-    client.loop();
   }
 
 }
@@ -150,7 +149,9 @@ connectWifi(ssid,password);
 }
 
 void loop() {
-  
+  if(WiFi.status() == WL_CONNECTED){
+    client.loop();
+  }
   unsigned long now=millis();
   if(now-lastMsg>2000){
     lastMsg=now;
@@ -206,4 +207,3 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
   }
 }
-
