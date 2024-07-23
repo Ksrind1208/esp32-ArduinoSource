@@ -2,9 +2,32 @@
 #include <PubSubClient.h>
 #include <WiFiClientSecure.h>
 #include <DHT.h>
-#include "BluetoothSerial.h"
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEServer.h>
 
-BluetoothSerial SerialBT;
+//define ble
+#define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+
+BLEServer *pServer;
+BLEService *pService;
+BLECharacteristic *pCharacteristic;
+class MyCallbacks: public BLECharacteristicCallbacks {
+    void onWrite(BLECharacteristic *pCharacteristic) {
+      pinMode(2,OUTPUT);
+      String value = pCharacteristic->getValue();
+      
+      if (value.length() > 0) {
+        if(value=="ON"){
+          digitalWrite(2,1);
+        }
+        if(value=="OFF"){
+          digitalWrite(2,0);
+        }
+      }
+    }
+};
 //---- WiFi settings
 const char* ssid = "AIoT_JSC";
 const char* password = "aiot1234@";
@@ -63,6 +86,7 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 DHT dht(4,DHT11);
 const int led_pin=2;
 
+
 void connectWifi(const char*SSID,const char* PASSWORD)
 {
   WiFi.mode(WIFI_STA);
@@ -93,6 +117,26 @@ Serial.begin(115200);
 dht.begin();
 pinMode(led_pin,OUTPUT);
 delay(2000);
+
+Serial.println("Starting BLE work!");
+
+BLEDevice::init("Controll over BLE");
+BLEServer *pServer= BLEDevice::createServer();
+pService = pServer->createService(SERVICE_UUID);
+pCharacteristic =pService->createCharacteristic(CHARACTERISTIC_UUID, BLECharacteristic::PROPERTY_READ|BLECharacteristic::PROPERTY_WRITE);
+pCharacteristic->setValue("Hello world from BLE");
+pCharacteristic->setCallbacks(new MyCallbacks());
+
+pService->start();
+// BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
+BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+pAdvertising->addServiceUUID(SERVICE_UUID);
+pAdvertising->setScanResponse(true);
+pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
+pAdvertising->setMinPreferred(0x12);
+BLEDevice::startAdvertising();
+Serial.println("Characteristic defined! Now you can read it in your phone!");
+
 Serial.print("\nConnecting to ");
 Serial.println(ssid);
 
@@ -123,6 +167,7 @@ void loop() {
 
     String data="";
     data+=(String(temp, 2)+"-"+String(humid, 2));
+    pCharacteristic->setValue(data);
     client.publish(temp_humid_Topic,data.c_str());
   }
 }
