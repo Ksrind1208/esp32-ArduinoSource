@@ -1,7 +1,10 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <WiFiClientSecure.h>
+#include <DHT.h>
+#include "BluetoothSerial.h"
 
+BluetoothSerial SerialBT;
 //---- WiFi settings
 const char* ssid = "AIoT_JSC";
 const char* password = "aiot1234@";
@@ -12,6 +15,7 @@ const char* mqtt_password = "Duc1282003"; // replace with your password
 const int mqtt_port =8883;
 const int max_retry=10;
 static int curRetry=0;
+unsigned long lastMsg=0;
 
 WiFiClientSecure espClient;
 PubSubClient client(espClient);
@@ -56,6 +60,8 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 -----END CERTIFICATE-----
 )EOF";
 
+DHT dht(4,DHT11);
+const int led_pin=2;
 
 void connectWifi(const char*SSID,const char* PASSWORD)
 {
@@ -69,7 +75,7 @@ void connectWifi(const char*SSID,const char* PASSWORD)
     curRetry++;
     if(curRetry>max_retry){
       Serial.println("Connect to wifi fail");
-      curRetry=0;
+      curRetry=0;   
       break;
     }
     delay(1000);
@@ -84,6 +90,9 @@ void connectWifi(const char*SSID,const char* PASSWORD)
 void setup() {
 
 Serial.begin(115200);
+dht.begin();
+pinMode(led_pin,OUTPUT);
+delay(2000);
 Serial.print("\nConnecting to ");
 Serial.println(ssid);
 
@@ -105,6 +114,17 @@ void loop() {
   {
     connectWifi(ssid,password);
   }
+
+  unsigned long now=millis();
+  if(now-lastMsg>2000){
+    lastMsg=now;
+    float temp=dht.readTemperature();
+    float humid=dht.readHumidity();
+
+    String data="";
+    data+=(String(temp, 2)+"-"+String(humid, 2));
+    client.publish(temp_humid_Topic,data.c_str());
+  }
 }
 
 
@@ -112,7 +132,7 @@ void connectMQTT() {
   // Loop until we’re reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection…");
-    String clientId = "ESP32Client-"; // Create a random client ID
+    String clientId = "ESP32Client-"; 
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
     if (client.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
@@ -124,30 +144,23 @@ void connectMQTT() {
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
-      Serial.println(" try again in 3 seconds");   // Wait 5 seconds before retrying
+      Serial.println(" try again in 3 seconds");   
       delay(3000);
     }
   }
 }
-
-// //=======================================
-// // This void is called every time we have a message from the broker
 
 void callback(char* topic, byte* payload, unsigned int length) {
   String incommingMessage = "";
   for (int i = 0; i < length; i++) incommingMessage+=(char)payload[i];
   Serial.println("Message arrived ["+String(topic)+"] "+incommingMessage);
 
-  // if( strcmp(topic,irrigacao_topic) == 0){
-  //   if (incommingMessage.equals("1")) {
-  //     digitalWrite(LED_1, HIGH); 
-  //   } else {
-  //     digitalWrite(LED_1, LOW); 
-  //   }
-  // }
   if(strcmp(topic,led_Topic)==0){
-    if(incommingMessage.equals("Openthedoor")){
-      Serial.println("Openthedoor");
+    if(incommingMessage.equals("ON")){
+      digitalWrite(led_pin,1);
+    }
+    if(incommingMessage.equals("OFF")){
+      digitalWrite(led_pin,0);
     }
   }
   if(strcmp(topic,temp_humid_Topic)==0){
