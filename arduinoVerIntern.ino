@@ -107,6 +107,11 @@ void connectWifi(const char*SSID,const char* PASSWORD)
   if(WiFi.status() == WL_CONNECTED){
     Serial.println("\nWiFi connected\nIP address: ");
     Serial.println(WiFi.localIP());
+    espClient.setCACert(root_ca);
+    client.setServer(mqtt_server, mqtt_port);
+    client.setCallback(callback);
+    connectMQTT();
+    client.loop();
   }
 
 }
@@ -140,25 +145,12 @@ Serial.println("Characteristic defined! Now you can read it in your phone!");
 Serial.print("\nConnecting to ");
 Serial.println(ssid);
 
-
-espClient.setCACert(root_ca);
-client.setServer(mqtt_server, mqtt_port);
-client.setCallback(callback);
-
+connectWifi(ssid,password);
 
 }
 
 void loop() {
-  if (WiFi.status() == WL_CONNECTED)
-  {
-    if (!client.connected()) connectMQTT();
-    client.loop();
-  } 
-  else 
-  {
-    connectWifi(ssid,password);
-  }
-
+  
   unsigned long now=millis();
   if(now-lastMsg>2000){
     lastMsg=now;
