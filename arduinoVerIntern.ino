@@ -53,22 +53,25 @@ class ServerCallbacks: public BLEServerCallbacks {
 };
 
 //---- WiFi settings
-const char* ssid = "Minh Tam 2.4 G";
-const char* password = "21072018";
+const char* ssid = "AIoT_JSC";
+const char* password = "aiot1234@";
 // ---- MQTT Broker settings
-const char* mqtt_server = "f41b6c6a5f49462c8c57817532ae5e39.s1.eu.hivemq.cloud"; 
-const char* mqtt_username = "duc123123tc"; 
-const char* mqtt_password = "Duc1282003"; 
-const int mqtt_port =8883;
-// const char* mqtt_server = "broker.emqx.io"; 
-// const char* mqtt_username = ""; 
-// const char* mqtt_password = ""; 
+// const char* mqtt_server = "f41b6c6a5f49462c8c57817532ae5e39.s1.eu.hivemq.cloud"; 
+// const char* mqtt_username = "duc123123tc"; 
+// const char* mqtt_password = "Duc1282003"; 
 // const int mqtt_port =8883;
+const char* mqtt_server = "mqtt.eclipseprojects.io"; 
+const char* mqtt_username = ""; 
+const char* mqtt_password = ""; 
+const int mqtt_port =1883;
 const int max_retry=10;
 static int curRetry=0;
+const int max_retry_mqtt=10;
+static int curRetryMqtt=0;
 unsigned long lastMsg=0;
 
-WiFiClientSecure wifiClient;
+// WiFiClientSecure wifiClient;
+WiFiClient wifiClient;
 EthernetClient ethClient;
 SSLClient secureClientEth(&ethClient);
 PubSubClient client;
@@ -113,39 +116,6 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 -----END CERTIFICATE-----
 )EOF";
 
-// static const char *root_ca PROGMEM = R"EOF(
-// -----BEGIN ENCRYPTED PRIVATE KEY-----
-// MIIFJDBWBgkqhkiG9w0BBQ0wSTAxBgkqhkiG9w0BBQwwJAQQAXAPBTactP9e7Vmi
-// vZdz5wICCAAwDAYIKoZIhvcNAgkFADAUBggqhkiG9w0DBwQI1rv1mag8LzsEggTI
-// TzTlTu0CtSeZZnDwPtu2/6mrh552NlVi8/iYAHiXEpkQ2qtTYXBL1NESHVo3ExIZ
-// 4oqqekXeAenAQcei06TshQlUpn1vgsYDctbwsq8jtNscJbqApDMaS/RfeATQDlAc
-// PhSRTXrw+8oOkhfiZ9mjbAMxm1xICXnRe57JDAFKQmX9PmP+/l0kVlEHUdZT2JaR
-// 22/5FVyGyhxn/WKCvtH3B5K8w8EZs2d9LG2iRl1qOc9OODTTd/UYXmsI4qj2yyD8
-// mM/9JsucKKJLoSex63F4CfLmU4VuBJyAApgrZqeIlvpRGpt7sBFjFQuLrw/8d27g
-// Q7NHcEAvGf7mJ5HAmZdv2cfvmHO41wejBTClYthwYio6dIUir8fPKS+patkcpMk/
-// hNyxWH7Wj6Ls1S34GjITNJBAVA0zFR4PJ5zWym1rlkJKRAlvmibQNC9iYt2c3dQ5
-// pYQ4CjYCZWYEXmtt2pClyekuwAchRs5sfvYmKfqeQDMup3qaYZ5nIhpEHZjZw2jW
-// VpDosrws41BYm636ANxMs+mA6pk0Z960eBg61ROhRw5UgfuohgvNfxuGqbEJMZ4J
-// dB5pIJU5Wh3U7oofgLua/LdMg+7qddRDkfZndKwtTPEtxTvW8opVklaiShUu1m+K
-// lSgl51LQAt9eBRR1eZKvZ7JNIP+hJ82IR24xtueQAdGs59pN0as6OQxBUBjBNnLr
-// Do2qRaSXxXrWooMeoEZHWazni6O/vuyOMD5vdfZZoE1WNTiilFdN8MbdR0UEyiH1
-// 4KNXNXgy+yNIt8ylM8Z/9ZvudA0QIHDfqYOewNxA7VQevPOGqh7HPVg5bnc99tGH
-// oXZ9LqkrBdGZiG6zQ2gr+yz7x2csALR1Y/Og+RO3eaS5+/CjxcqqGqaV42VVLSW/
-// YinnRUi2aB+xiawajtTiqaPtaYRD5LXsd173FHe2NrLUu1ML81r+9FnkDKBVx8zv
-// DUY6BHu+MuMqbS0bXYaxcCxj/f6Rz3E9oQDm6Xnv4O1cVug71HMCcsEcgpGY8UZd
-// vWnWdmIpSKPi0ibhi1s0UiiZI+iM00ywRpInvZFD5nZEqsBflAoQzIFblm7w5Kcx
-// +/owmXp/xbq+33I6eqCJu/+gP0SV78WMLaKHtt9sFLDpwy4PB+4KPONh587c85+B
-// IP4C00bEd4wNEmobnHWw9TdzNLjAYcaOguBLIHvsjmaruiK1IZZFeBIZpiXiw2gx
-// dGa1AqFax2Ans4BX7BokxuCIS5XiG0PXdRN/MrFBGtG90RAGwelAZwMVdMEs1wgl
-// HLTLL7NVoX/v/NIqKrswZDeitv4eL+NlWL5bUvL8DDTQ+jw3nhzGsh4JI6ff4Ien
-// XN5c5CkjEm+hZKde81mOl8HLVzXFEnKNvHS2x/7LjWZtM+PxYLJgpVNAMPt3/Ykt
-// R53sQMWCnwnD4hlLwObHvOjQhaYxzvj/I6HldODmX3b2bQggHIKk9Qaa2xiY59ET
-// cblBAnfFunHwp761tyRm5wrEq0hdkGdqWuGK0M8VEtSJ6EZunj1AwSkMppi+7nw8
-// QxbwhRridVhNWVZOkqP6IfeoOOOVkAZHnIJ5vGzG1PFUCJ0H7PPg+6BR6CMZq1pz
-// dpC6N8XQjVLHZJt7/6eLcoMrYf3Dx6Bb
-// -----END ENCRYPTED PRIVATE KEY-----
-// )EOF";
-
 DHT dht(4,DHT11);
 const int led_pin=2;
 
@@ -168,16 +138,17 @@ void connectEthernet() {
     byte* mac = new byte[6];
     macCharArrayToBytes(ETHERNET_MAC, mac);
     Ethernet.init(ETHERNET_CS_PIN);
-  
+    // IPAddress ip;
+    // ip.fromString(ETHERNET_IP);
     // Serial.println("Starting ETHERNET connection...");
     Ethernet.begin(mac);
     // delay(200);
 
     Serial.print("Ethernet IP is: ");
     Serial.println(Ethernet.localIP());
-    client.setClient(secureClientEth);
+    client.setClient(ethClient);
     // secureClientEth.setCACert(root_ca);
-    secureClientEth.setCACert(root_ca);
+    // secureClientEth.setCACert(root_ca);
     client.setServer(mqtt_server, mqtt_port);
     client.setCallback(callback);
     connectMQTT();
@@ -204,21 +175,17 @@ void connectWifi(const char*SSID,const char* PASSWORD)
     Serial.println("\nWiFi connected\nIP address: ");
     Serial.println(WiFi.localIP());
     client.setClient(wifiClient);
-    wifiClient.setCACert(root_ca);
+
+    // wifiClient.setCACert(root_ca);
+    // BearSSL::X509List *serverTrustedCA = new BearSSL::X509List(root_ca);
+    // wifiClient.setTrustAnchors(serverTrustedCA);
     client.setServer(mqtt_server, mqtt_port);
     client.setCallback(callback);
     connectMQTT();
   }
 }
-
-void setup() {
-
-  Serial.begin(115200);
-  dht.begin();
-  pinMode(led_pin,OUTPUT);
-  delay(2000);
-
-  Serial.println("Starting BLE work!");
+void connectBLE(){
+    Serial.println("Starting BLE work!");
 
   BLEDevice::init("Controll over BLE");
   pServer = BLEDevice::createServer();
@@ -237,10 +204,38 @@ void setup() {
   pAdvertising->setMinPreferred(0x12);
   pAdvertising->start();
   Serial.println("Characteristic defined! Now you can read it in your phone!");
+}
+void vTaskWifi(void * pvParameters) {
+  while (true) {
+    if(WiFi.status()==WL_CONNECTED){
+      client.setClient(wifiClient);
+      // wifiClient.setCACert(root_ca);
+      // BearSSL::X509List *serverTrustedCA = new BearSSL::X509List(root_ca);
+      // wifiClient.setTrustAnchors(serverTrustedCA);
+      client.setServer(mqtt_server, mqtt_port);
+      client.setCallback(callback);
+      connectMQTT();
+      break;
+    }
+    delay(20);
+  }
+  while(true){
+  }
+}
+void setup() {
+
+  Serial.begin(115200);
+  dht.begin();
+  pinMode(led_pin,OUTPUT);
+  delay(2000);
+
+  connectBLE();
+
 
   Serial.print("\nConnecting to ");
   Serial.println(ssid);
 
+  // xTaskCreatePinnedToCore(vTaskWifi, "WifiTask", 2048*3, NULL, 5, NULL, 0);
   connectWifi(ssid,password);
   // connectEthernet();
 }
@@ -262,6 +257,8 @@ void loop() {
     data+=(String(temp, 2)+"-"+String(humid, 2));
     pCharacteristic->setValue(data);
     client.publish(temp_humid_Topic,data.c_str());
+    client.publish("dhtTemp",String(dht.readTemperature()).c_str());
+    client.publish("dhtHum",String(dht.readHumidity()).c_str());
   }
 }
 
@@ -272,6 +269,11 @@ void connectMQTT() {
     String clientId = "ESP32Client-"; 
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
+    curRetryMqtt++;
+    if(curRetryMqtt>max_retry_mqtt){
+      Serial.print("Mat ket noi mqtt");
+      break;
+    }
     if (client.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
       Serial.println("connected");
 
